@@ -13,8 +13,8 @@ At the end of a stream, it's tiring and time consuming to have to pick who to ra
 
 `config.toml` should be in the same directory as the `raid-conductor.exe` binary. There are a few properties that can go in your `config.toml` file. Properties listed below are optional unless otherwise noted. See `sample-config.toml` for an example with fake configuration values.
 
-`twitch_client_id` (required): The client ID for your Twitch application. Raid Conductor can't read talk to Twitch without this.
-`twitch_client_secret` (required): The client secret for your Twitch application. Raid Conductor can't read talk to Twitch without this.
-`priority_streamers` (required): The list of streamers you want to prioritize raiding.
-`backup_streamers` (required): The list of streamers to check after the prioritized list.
-`games_blacklist` (required): The list of games you don't want to send your viewers over to.
+- `twitch_client_id` (required): The client ID for your Twitch application. Raid Conductor can't read talk to Twitch without this.
+- `twitch_client_secret` (required): The client secret for your Twitch application. Raid Conductor can't read talk to Twitch without this.
+- `priority_streamers` (required): The list of streamers you want to prioritize raiding.
+- `backup_streamers` (required): The list of streamers to check after the prioritized list.
+- `games_blacklist` (required): The list of games you don't want to send your viewers over to.
