@@ -22,18 +22,10 @@ func main() {
 	}
 
 	// Check list of priority streamers
-	for _, channel := range viper.GetStringSlice("priority_streamers") {
-		if isChannelRaidCandidate(client, channel, bannedGames) {
-			fmt.Println("Priority raid: https://twitch.tv/" + channel)
-		}
-	}
+	checkStreamers(client, viper.GetStringSlice("priority_streamers"), bannedGames)
 
 	// Check list of priority streamers
-	for _, channel := range viper.GetStringSlice("backup_streamers") {
-		if isChannelRaidCandidate(client, channel, bannedGames) {
-			fmt.Println("Backup raid: https://twitch.tv/" + channel)
-		}
-	}
+	checkStreamers(client, viper.GetStringSlice("backup_streamers"), bannedGames)
 }
 
 func readConfigFile() error {
@@ -85,7 +77,23 @@ func getBannedGameIDs(client *helix.Client) (*helix.GamesResponse, error) {
 	return resp, nil
 }
 
-func isChannelRaidCandidate(client *helix.Client, channel string, bannedGames *helix.GamesResponse) bool {
+func checkStreamers(client *helix.Client, allStreamers []string, bannedGames *helix.GamesResponse) {
+	for _, channel := range allStreamers {
+		candidate, channelStatus := isChannelRaidCandidate(client, channel, bannedGames)
+		if candidate {
+			currentGame, err := getGameNameByID(client, channelStatus.GameID)
+			if err != nil {
+				// TODO Handle the error
+				log.Println("Error getting game for ID: " + channelStatus.GameID)
+			}
+
+			// TODO Alert in a more useful way (pop up window?)
+			fmt.Println("https://twitch.tv/" + channel + " is streaming " + currentGame)
+		}
+	}
+}
+
+func isChannelRaidCandidate(client *helix.Client, channel string, bannedGames *helix.GamesResponse) (bool, helix.Channel) {
 	channelStatus, err := getChannelStatus(client, channel)
 	if err != nil {
 		log.Fatal("Error getting channel info:", err.Error())
@@ -93,24 +101,24 @@ func isChannelRaidCandidate(client *helix.Client, channel string, bannedGames *h
 
 	// Is channel live?
 	if !channelStatus.IsLive {
-		return false
+		return false, channelStatus
 	}
 
 	/*
 		// TODO Is channel in preferred language?
 		if !channelStatus.IsLive {
-			return false
+			return false, channelStatus
 		}
 	*/
 
 	// TODO Is channel streaming a banned game?
 	for _, game := range bannedGames.Data.Games {
 		if channelStatus.GameID == game.ID {
-			return false
+			return false, channelStatus
 		}
 	}
 
-	return true
+	return true, channelStatus
 }
 
 func getChannelStatus(client *helix.Client, channel string) (helix.Channel, error) {
@@ -127,4 +135,19 @@ func getChannelStatus(client *helix.Client, channel string) (helix.Channel, erro
 	}
 
 	return helix.Channel{}, errors.New("No channels found that matched: " + channel)
+}
+
+func getGameNameByID(client *helix.Client, gameID string) (string, error) {
+	resp, err := client.GetGames(&helix.GamesParams{
+		IDs: []string{gameID},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if len(resp.Data.Games) > 0 {
+		return resp.Data.Games[0].Name, nil
+	}
+
+	return "", errors.New("Could not find name for game with ID " + gameID)
 }
