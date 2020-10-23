@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/nicklaw5/helix"
@@ -20,9 +21,17 @@ func main() {
 		log.Fatal("Error getting banned game IDs:", err.Error())
 	}
 
+	// Check list of priority streamers
 	for _, channel := range viper.GetStringSlice("priority_streamers") {
 		if isChannelRaidCandidate(client, channel, bannedGames) {
-			log.Println("Potentially raid: " + channel)
+			fmt.Println("Priority raid: https://twitch.tv/" + channel)
+		}
+	}
+
+	// Check list of priority streamers
+	for _, channel := range viper.GetStringSlice("backup_streamers") {
+		if isChannelRaidCandidate(client, channel, bannedGames) {
+			fmt.Println("Backup raid: https://twitch.tv/" + channel)
 		}
 	}
 }
