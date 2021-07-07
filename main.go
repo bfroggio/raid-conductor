@@ -111,7 +111,7 @@ func raid(allStreamers []streamer, announceFailure bool) {
 	}
 
 	for _, streamer := range allStreamers {
-		chatClient.Say(viper.GetString("twitch_username"), "We're raiding @"+streamer.name+"! They're playing \""+streamer.game+".\"")
+		chatClient.Say(viper.GetString("twitch_username"), "We're raiding @"+streamer.name+"! They're streaming \""+streamer.game+".\"")
 		chatClient.Say(viper.GetString("twitch_username"), "/raid "+streamer.name)
 		return
 	}
