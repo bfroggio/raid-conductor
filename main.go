@@ -51,7 +51,7 @@ func main() {
 	}
 
 	if len(allStreamers) > 0 {
-		// TODO Trigger a raid
+		raid(allStreamers)
 	} else {
 		// Check list of backup streamers
 		allStreamers, err = checkStreamers(searchClient, viper.GetStringSlice("backup_streamers"), bannedGames)
@@ -59,10 +59,7 @@ func main() {
 			log.Fatal("Error configuring search client:", err.Error())
 		}
 
-		// TODO Trigger a raid here too
-		for _, streamer := range allStreamers {
-			chatClient.Say(viper.GetString("twitch_username"), streamer.name+" is playing \""+streamer.game+"\"")
-		}
+		raid(allStreamers)
 	}
 
 	time.Sleep(5 * time.Second)
@@ -105,6 +102,14 @@ func configureSearchClient() (*helix.Client, error) {
 
 	return client, nil
 
+}
+
+func raid(allStreamers []streamer) {
+	for _, streamer := range allStreamers {
+		chatClient.Say(viper.GetString("twitch_username"), "We're raiding @"+streamer.name+"! They're playing \""+streamer.game+".\"")
+		chatClient.Say(viper.GetString("twitch_username"), "/raid "+streamer.name)
+		break
+	}
 }
 
 func getBannedGameIDs(client *helix.Client) (*helix.GamesResponse, error) {
