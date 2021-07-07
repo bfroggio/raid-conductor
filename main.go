@@ -4,18 +4,34 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
+	"time"
 
 	"github.com/gempir/go-twitch-irc/v2"
 	"github.com/nicklaw5/helix"
 	"github.com/spf13/viper"
 )
 
-func main() {
-	chatClient := twitch.NewClient(viper.GetString("twitch_bot_username"), viper.GetString("twitch_bot_secret"))
+var chatClient = &twitch.Client{}
 
-	searchClient, err := configureClient()
+func main() {
+	rand.Seed(time.Now().Unix())
+
+	err := readConfigFile()
 	if err != nil {
-		log.Fatal("Error configuring client:", err.Error())
+		log.Fatal("Could not read config file:", err.Error())
+	}
+
+	go func() {
+		err := configureChatClient()
+		if err != nil {
+			log.Fatal("Error configuring chat client:", err.Error())
+		}
+	}()
+
+	searchClient, err := configureSearchClient()
+	if err != nil {
+		log.Fatal("Error configuring search client:", err.Error())
 	}
 
 	// Get banned game IDs once at the top of main to preserve API calls and decrease latency
@@ -28,7 +44,7 @@ func main() {
 	checkStreamers(searchClient, viper.GetStringSlice("priority_streamers"), bannedGames)
 
 	// TODO Trigger a raid
-	chatClient.Say(viper.GetString("twitch_username"), "poots")
+	chatClient.Say(viper.GetString("twitch_username"), "I'm awake!")
 
 	// Check list of priority streamers
 	checkStreamers(searchClient, viper.GetStringSlice("backup_streamers"), bannedGames)
@@ -48,12 +64,13 @@ func readConfigFile() error {
 	return nil
 }
 
-func configureClient() (*helix.Client, error) {
-	err := readConfigFile()
-	if err != nil {
-		log.Fatal("Could not read config file:", err.Error())
-	}
+func configureChatClient() error {
+	chatClient = twitch.NewClient(viper.GetString("twitch_bot_username"), viper.GetString("twitch_bot_secret"))
+	chatClient.Join(viper.GetString("twitch_username"))
+	return chatClient.Connect()
+}
 
+func configureSearchClient() (*helix.Client, error) {
 	client, err := helix.NewClient(&helix.Options{
 		ClientID:     viper.GetString("twitch_client_id"),
 		ClientSecret: viper.GetString("twitch_client_secret"),
