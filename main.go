@@ -5,27 +5,35 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/gempir/go-twitch-irc/v2"
 	"github.com/nicklaw5/helix"
 	"github.com/spf13/viper"
 )
 
 func main() {
-	client, err := configureClient()
+	chatClient := twitch.NewClient(viper.GetString("twitch_bot_username"), viper.GetString("twitch_bot_secret"))
+
+	searchClient, err := configureClient()
 	if err != nil {
 		log.Fatal("Error configuring client:", err.Error())
 	}
 
 	// Get banned game IDs once at the top of main to preserve API calls and decrease latency
-	bannedGames, err := getBannedGameIDs(client)
+	bannedGames, err := getBannedGameIDs(searchClient)
 	if err != nil {
 		log.Fatal("Error getting banned game IDs:", err.Error())
 	}
 
 	// Check list of priority streamers
-	checkStreamers(client, viper.GetStringSlice("priority_streamers"), bannedGames)
+	checkStreamers(searchClient, viper.GetStringSlice("priority_streamers"), bannedGames)
+
+	// TODO Trigger a raid
+	chatClient.Say(viper.GetString("twitch_username"), "poots")
 
 	// Check list of priority streamers
-	checkStreamers(client, viper.GetStringSlice("backup_streamers"), bannedGames)
+	checkStreamers(searchClient, viper.GetStringSlice("backup_streamers"), bannedGames)
+
+	// TODO Trigger a raid here too
 }
 
 func readConfigFile() error {
@@ -96,7 +104,7 @@ func checkStreamers(client *helix.Client, allStreamers []string, bannedGames *he
 func isChannelRaidCandidate(client *helix.Client, channel string, bannedGames *helix.GamesResponse) (bool, helix.Channel) {
 	channelStatus, err := getChannelStatus(client, channel)
 	if err != nil {
-		log.Fatal("Error getting channel info:", err.Error())
+		log.Fatal("Error getting channel info: ", err.Error())
 	}
 
 	// Is channel live?
@@ -111,7 +119,7 @@ func isChannelRaidCandidate(client *helix.Client, channel string, bannedGames *h
 		}
 	*/
 
-	// TODO Is channel streaming a banned game?
+	// Is channel streaming a banned game?
 	for _, game := range bannedGames.Data.Games {
 		if channelStatus.GameID == game.ID {
 			return false, channelStatus
@@ -134,7 +142,7 @@ func getChannelStatus(client *helix.Client, channel string) (helix.Channel, erro
 		return resp.Data.Channels[0], nil
 	}
 
-	return helix.Channel{}, errors.New("No channels found that matched: " + channel)
+	return helix.Channel{}, nil
 }
 
 func getGameNameByID(client *helix.Client, gameID string) (string, error) {
