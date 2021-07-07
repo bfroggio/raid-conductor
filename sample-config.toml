@@ -1,5 +1,8 @@
-twitch_client_id = "123456789101112131415"
-twitch_client_secret = "123456789101112131415"
+twitch_username = "bfroggio"
+twitch_bot_username = "raidconductor"
+twitch_bot_secret = "98756349373834"
+twitch_client_id = "436362674584000"
+twitch_client_secret = "123491112131415"
 priority_streamers = [
 	"bfroggio",
 	"fullfledgedlad",
