@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -13,6 +12,11 @@ import (
 )
 
 var chatClient = &twitch.Client{}
+
+type streamer struct {
+	name string
+	game string
+}
 
 func main() {
 	rand.Seed(time.Now().Unix())
@@ -41,15 +45,27 @@ func main() {
 	}
 
 	// Check list of priority streamers
-	checkStreamers(searchClient, viper.GetStringSlice("priority_streamers"), bannedGames)
+	allStreamers, err := checkStreamers(searchClient, viper.GetStringSlice("priority_streamers"), bannedGames)
+	if err != nil {
+		log.Fatal("Error configuring search client:", err.Error())
+	}
 
-	// TODO Trigger a raid
-	chatClient.Say(viper.GetString("twitch_username"), "I'm awake!")
+	if len(allStreamers) > 0 {
+		// TODO Trigger a raid
+	} else {
+		// Check list of backup streamers
+		allStreamers, err = checkStreamers(searchClient, viper.GetStringSlice("backup_streamers"), bannedGames)
+		if err != nil {
+			log.Fatal("Error configuring search client:", err.Error())
+		}
 
-	// Check list of priority streamers
-	checkStreamers(searchClient, viper.GetStringSlice("backup_streamers"), bannedGames)
+		// TODO Trigger a raid here too
+		for _, streamer := range allStreamers {
+			chatClient.Say(viper.GetString("twitch_username"), streamer.name+" is playing \""+streamer.game+"\"")
+		}
+	}
 
-	// TODO Trigger a raid here too
+	time.Sleep(5 * time.Second)
 }
 
 func readConfigFile() error {
@@ -102,20 +118,22 @@ func getBannedGameIDs(client *helix.Client) (*helix.GamesResponse, error) {
 	return resp, nil
 }
 
-func checkStreamers(client *helix.Client, allStreamers []string, bannedGames *helix.GamesResponse) {
+func checkStreamers(client *helix.Client, allStreamers []string, bannedGames *helix.GamesResponse) ([]streamer, error) {
+	liveStreamers := []streamer{}
+
 	for _, channel := range allStreamers {
 		candidate, channelStatus := isChannelRaidCandidate(client, channel, bannedGames)
 		if candidate {
 			currentGame, err := getGameNameByID(client, channelStatus.GameID)
 			if err != nil {
-				// TODO Handle the error
-				log.Println("Error getting game for ID: " + channelStatus.GameID)
+				return []streamer{}, errors.New("Error getting game for ID: " + channelStatus.GameID)
 			}
 
-			// TODO Alert in a more useful way (pop up window?)
-			fmt.Println("https://twitch.tv/" + channel + " is streaming " + currentGame)
+			liveStreamers = append(liveStreamers, streamer{channel, currentGame})
 		}
 	}
+
+	return liveStreamers, nil
 }
 
 func isChannelRaidCandidate(client *helix.Client, channel string, bannedGames *helix.GamesResponse) (bool, helix.Channel) {
