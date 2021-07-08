@@ -30,6 +30,8 @@ func main() {
 		}
 	}()
 
+	time.Sleep(5 * time.Second)
+
 	chatClient.Say(viper.GetString("twitch_username"), "Looking for someone to raid...")
 
 	searchClient, err := configureSearchClient()
