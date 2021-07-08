@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"log"
-	"math/rand"
 	"time"
 
 	"github.com/gempir/go-twitch-irc/v2"
@@ -19,8 +18,6 @@ type streamer struct {
 }
 
 func main() {
-	rand.Seed(time.Now().Unix())
-
 	err := readConfigFile()
 	if err != nil {
 		log.Fatal("Could not read config file:", err.Error())
@@ -32,6 +29,8 @@ func main() {
 			log.Fatal("Error configuring chat client:", err.Error())
 		}
 	}()
+
+	chatClient.Say(viper.GetString("twitch_username"), "Looking for someone to raid...")
 
 	searchClient, err := configureSearchClient()
 	if err != nil {
