@@ -1,4 +1,4 @@
-Note: I no longer stream to Twitch. You're welcome to try using this project or to modify the code yourself, but I am unable to offer support if you get stuck.
+> Note: I no longer stream to Twitch. You're welcome to try using this project or to modify the code yourself, but I am unable to offer support if you get stuck.
 
 # Raid Conductor
 
