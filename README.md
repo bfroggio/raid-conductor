@@ -1,5 +1,6 @@
+Note: I no longer stream to Twitch. You're welcome to try using this project or to modify the code yourself, but I am unable to offer support if you get stuck.
+
 # Raid Conductor
-[![Man Hours](https://img.shields.io/endpoint?url=https%3A%2F%2Fmh.jessemillar.com%2Fhours%3Frepo%3Dhttps%3A%2F%2Fgithub.com%2Fbfroggio%2Fraid-conductor.git)](https://jessemillar.com/r/man-hours)
 
 At the end of a stream, it's tiring and time consuming to have to pick who to raid with your current viewers. Raid Conductor simplifies that process by running an automated search over a pre-defined list of streamers. During this search, Raid Conductor prioritizes streamers based on your preferences, game dislikes, and language selection.
 
